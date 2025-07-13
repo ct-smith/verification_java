@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.example.legalentity.bizmodel.LegalEntityRequestBizModel;
+import com.example.legalentity.bizmodel.LegalEntitySearchReadData;
 import com.example.legalentity.bizmodel.LegalEntitySearchReadResultBizModel;
 import com.example.legalentity.common.SiComponentHolder;
 import com.example.legalentity.common.TrBusinessException;
@@ -166,8 +167,16 @@ public class LegalEntitySearchBizService {
   }
 
   // LegalEntitySearchReadDataに取得したlegalEntityIdとlegalEntityNameShortをセットする
+  List<LegalEntitySearchReadData> readData = new ArrayList<LegalEntitySearchReadData>();
+
+  cfccTcfentityList.forEach(data->
+  {
+    LegalEntitySearchReadData model = new LegalEntitySearchReadData();
+    model.setLegalEntityId(data.getLegalEntityId());
+    model.setLegalEntityNameShort(data.getLegalEntityNameShort());
+    readData.add(model);
+  });
 
   // LegalEntitySearchReadResultBizModelにdataNumberとLegalEntitySearchReadDataをセットして返却
-
-  return null;
+  var legalEntitySearchReadResultBizModel = new LegalEntitySearchReadResultBizModel();return legalEntitySearchReadResultBizModel.setDataNumber(cfccTcfentityList.size()).setLegalEntitySearchReadData(readData);
 }}
