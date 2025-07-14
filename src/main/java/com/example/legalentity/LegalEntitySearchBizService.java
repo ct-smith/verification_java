@@ -1,8 +1,6 @@
 package com.example.legalentity;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,11 +12,9 @@ import com.example.legalentity.bizmodel.LegalEntitySearchReadResultBizModel;
 import com.example.legalentity.common.SiComponentHolder;
 import com.example.legalentity.common.TrBusinessException;
 import com.example.legalentity.example.CfccTcfentityExample;
-import com.example.legalentity.example.CfccTcfbondExample.Criteria;
 import com.example.legalentity.example.CfccTcfcbcountryExample;
 import com.example.legalentity.mapper.CfccTcfcbcountryMapper;
 import com.example.legalentity.mapper.CfccTcfentityMapper;
-import com.example.legalentity.model.CfccTcfentity;
 import static com.example.legalentity.common.CommonConstants.MSG_ID_CF10A007;
 import static com.example.legalentity.common.CommonConstants.RECORD_STATUS_VALID;
 import static com.example.legalentity.common.CommonConstants.TEMPORARY_SIGN_VALID;
@@ -145,7 +141,7 @@ public class LegalEntitySearchBizService {
           locationList.add(country.getCountryCode());
         });
 
-        criteria.andHOLocationEqualTo(locationList);
+        criteria.andHOLocationIn(locationList);
 
         // 取得件数が0件の場合
       } else {
@@ -153,30 +149,30 @@ public class LegalEntitySearchBizService {
             MSG_ID_CF10A007);
       }
     }
+
+    // Legal Entity情報取得
+    var cfccTcfentityList = entityMapper.selectByExample(example);
+
+    // 取得件数が0件の場合、
+    if (cfccTcfentityList.isEmpty()) {
+      // TrBusinessExceptionをスローする
+      throw new TrBusinessException(siComponent.getMessageSourceAccessor(),
+          MSG_ID_CF10A007);
+    }
+
+    // LegalEntitySearchReadDataに取得したlegalEntityIdとlegalEntityNameShortをセットする
+    var readData = new ArrayList<LegalEntitySearchReadData>();
+
+    cfccTcfentityList.forEach(data -> {
+      var model = new LegalEntitySearchReadData();
+      model.setLegalEntityId(data.getEntityId());
+      model.setLegalEntityNameShort(data.getEntityNameSEng());
+      readData.add(model);
+    });
+
+    // LegalEntitySearchReadResultBizModelにdataNumberとLegalEntitySearchReadDataをセットして返却
+    return new LegalEntitySearchReadResultBizModel()
+        .setDataNumber(cfccTcfentityList.size())
+        .setLegalEntitySearchReadDatas(readData);
   }
-
-  // Legal Entity情報取得
-  var cfccTcfentityList = entityMapper.selectByExample(example);
-
-  // 取得件数が0件の場合、
-  if(cfccTcfentityList.isEmpty())
-  {
-    // TrBusinessExceptionをスローする
-    throw new TrBusinessException(siComponent.getMessageSourceAccessor(),
-        MSG_ID_CF10A007);
-  }
-
-  // LegalEntitySearchReadDataに取得したlegalEntityIdとlegalEntityNameShortをセットする
-  List<LegalEntitySearchReadData> readData = new ArrayList<LegalEntitySearchReadData>();
-
-  cfccTcfentityList.forEach(data->
-  {
-    LegalEntitySearchReadData model = new LegalEntitySearchReadData();
-    model.setLegalEntityId(data.getLegalEntityId());
-    model.setLegalEntityNameShort(data.getLegalEntityNameShort());
-    readData.add(model);
-  });
-
-  // LegalEntitySearchReadResultBizModelにdataNumberとLegalEntitySearchReadDataをセットして返却
-  var legalEntitySearchReadResultBizModel = new LegalEntitySearchReadResultBizModel();return legalEntitySearchReadResultBizModel.setDataNumber(cfccTcfentityList.size()).setLegalEntitySearchReadData(readData);
-}}
+}
